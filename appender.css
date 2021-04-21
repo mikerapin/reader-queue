@@ -1,0 +1,12 @@
+.queue-container {
+    border: 1px solid #000;
+    padding: 20px;
+}
+
+.queue-container .ComicBtn.queue-read-button {
+    width: 120px;
+}
+
+.queue-read {
+    width: 100%;
+}

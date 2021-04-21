@@ -16,8 +16,7 @@
 
 .queue-manager-toggle {
   display: block;
-  width: 50%;
-  min-width: 140px;
+  width: 50px;
   align-self: flex-end;
   padding: 8px 15px;
   background: #ddd;
@@ -27,8 +26,9 @@
 .queue-manager {
   background: #fff;
   margin-top: 8px;
-  box-shadow: 1px 1px 10px #666;
+  min-width: 130px;
   padding: 5px 10px;
+  box-shadow: 1px 1px 10px #666;
 }
 
 .queue-item-container {
@@ -43,15 +43,52 @@
 }
 
 .remove-queue-item {
-  padding: 3px 6px;
-  background: #ccc;
+  width: 20px;
+  padding: 1px 1px 0;
+  background: none;
+}
+
+.remove-queue-item:active {
+  background: #f00;
 }
 
 .queue-clear {
-  width: 50%;
-  min-width: 130px; 
-  background: #ff6961;
-  padding: 8px;
-  margin: 0 auto;
+  width: 45px;
   display: block;
+  float: right;
+  background: #ff6961;
+}
+
+/* Extention overrides */
+.lv2-micro-item-button {
+  display: flex;
+}
+
+.lv2-micro-item-button .lv2-button, 
+.lv2-micro-item-button .lv2-row-button {
+  width: 160px;
+}
+
+/* GENERAL OVERRIDES FOR MY BOOKS */
+[data-analytics-endpoint="user/library"] {
+  background: #333;
+}
+
+.lv2-tabs-layout {
+  box-shadow: #efefef 0 4px 17px 15px;
+}
+
+.lv2-tab-content .lv2-book-micro-item,
+.lv2-tab-content .lv2-series-micro-item {
+  padding: 6px 14px 0;
+  height: 44px;
+}
+
+.lv2-micro-price-container {
+  min-width: 90px;
+  display: flex;
+}
+
+.lv2-sale-info .lv2-discounted-price {
+  margin: 0 5px;
 }

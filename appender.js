@@ -13,7 +13,7 @@ function initialize() {
             nextInQueue.innerHTML = `
             <h3 class="end-subtitle">Keep Reading In Your Queue</h3>
             <h4>${nextItem.title}</h4>
-            <div class="ComicBtn actBtn readBtn">
+            <div class="ComicBtn actBtn readBtn queue-read-button">
             <a class="read_link read-action primary-action action-button queue-read" href="https://www.comixology.com/comic-reader/${nextItem.sid}/${nextItem.id}">Read</a>
             </div>
             `;
