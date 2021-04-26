@@ -6,7 +6,7 @@
 
 .queue-manager-container {
   position: fixed;
-  top: 39px;
+  top: 78px;
   right: 7%;
   display: flex;
   flex-direction: column;
@@ -26,9 +26,10 @@
 .queue-manager {
   background: #fff;
   margin-top: 8px;
-  min-width: 130px;
   padding: 5px 10px;
+  min-width: 200px;
   box-shadow: 1px 1px 10px #666;
+  border-radius: 6px;
 }
 
 .queue-item-container {
@@ -52,11 +53,30 @@
   background: #f00;
 }
 
-.queue-clear {
+.queue-button-group {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid #bbb;
+  padding-top: 10px;
+}
+
+.queue-button {
   width: 45px;
   display: block;
-  float: right;
+  border-radius: 6px;
+}
+
+.queue-clear {
+  padding: 4px;
   background: #ff6961;
+}
+
+.queue-start-reading {
+  padding: 10px;
+  font-weight: bold;
+  background-color: #45af8e;
+  color: #fff;
 }
 
 /* Extention overrides */
@@ -66,10 +86,10 @@
 
 .lv2-micro-item-button .lv2-button, 
 .lv2-micro-item-button .lv2-row-button {
-  width: 160px;
+  flex-grow: 1;
 }
 
-/* GENERAL OVERRIDES FOR MY BOOKS */
+/* Style overrides for my books to make it look nice */
 [data-analytics-endpoint="user/library"] {
   background: #333;
 }
