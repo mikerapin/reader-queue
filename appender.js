@@ -1,5 +1,4 @@
-
-function initialize() {
+const initialize = () => {
     const endModal = document.querySelector('.end-comic');
     const nextInQueue = document.createElement('section');
     nextInQueue.classList.add('queue-container', 'end-comic');
@@ -9,22 +8,51 @@ function initialize() {
     chrome.storage.sync.get(['readqueue'], (result) => {
         const queue = result.readqueue;
         if (queue.length) {
-            nextItem = queue[0];
-            nextInQueue.innerHTML = `
-            <h3 class="end-subtitle">Keep Reading In Your Queue</h3>
-            <h4>${nextItem.title}</h4>
-            <div class="ComicBtn actBtn readBtn queue-read-button">
-            <a class="read_link read-action primary-action action-button queue-read" href="https://www.comixology.com/comic-reader/${nextItem.sid}/${nextItem.id}">Read</a>
-            </div>
-            `;
+            const currentlyReading = window.location.href.match(/[0-9]+/g);
+            let topOfQueue;
 
-            endModal.parentElement.insertBefore(nextInQueue, endModal);
-
+            // if we have any strange business in the url, just get the EFF out of there
+            if (currentlyReading.length !== 2) {
+                return;
+            }
             
+            // remove the top item from the queue if it matches the current book we're reading
+            if (queue[0].sid === currentlyReading[0] && queue[0].id === currentlyReading[1]) {
+                queue.shift();
+            }
+
+            if (queue.length) {
+                topOfQueue = queue[0]
+            } else {
+                topOfQueue = null;
+            }
+
+            if (topOfQueue !== null) {
+                // this is kind of simplistic, could be refactored to be less template and more programmatic?
+                nextInQueue.innerHTML = `
+                <h3 class="end-subtitle">Keep Reading In Your Queue</h3>
+                <h4>${topOfQueue.title}</h4>
+                <div class="ComicBtn actBtn readBtn queue-read-button">
+                <a class="read_link read-action primary-action action-button queue-read" href="https://www.comixology.com/comic-reader/${topOfQueue.sid}/${topOfQueue.id}">Read</a>
+                </div>
+                `;
+                
+                endModal.parentElement.insertBefore(nextInQueue, endModal);
+            }
+
+            // use this clever little devil to only update the queue when the end modal is visible
+            const observer = new IntersectionObserver((entries, obs) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        console.log('removing item from queue, heres the nee q', queue)
+                        chrome.storage.sync.set({ 'readqueue': queue })
+                        obs.disconnect()
+                    }
+                })
+            })
+            observer.observe(endModal)
         }
     });
-
-    console.log("prepended boss");
 }
 
 window.setTimeout(initialize(), 2000);
