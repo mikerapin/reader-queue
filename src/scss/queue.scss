@@ -1,0 +1,114 @@
+.add-to-queue {
+  margin-left: 6px;
+  background: #ccc;
+  padding: 0 10px;
+}
+
+.queue-manager-container {
+  display: flex;
+  flex-direction: column;
+  z-index: 9001;
+  text-align: left;
+}
+
+.queue-manager-toggle {
+  display: block;
+  width: 50px;
+  align-self: flex-end;
+  padding: 8px 15px;
+  background: #ddd;
+  border-radius: 3px;
+}
+
+.queue-manager {
+  max-height: 265px;
+  height: 265px;
+  overflow-y: scroll;
+  background: #fff;
+  margin-top: 8px;
+  padding: 5px 10px;
+  min-width: 200px;
+  box-shadow: 1px 1px 10px #666;
+  border-radius: 6px;
+}
+
+.queue-item-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 5px;
+}
+
+.queue-item {
+  margin-right: 10px;
+}
+
+.remove-queue-item {
+  width: 20px;
+  padding: 1px 1px 0;
+  background: none;
+}
+
+.remove-queue-item:active {
+  background: #f00;
+}
+
+.queue-button-group {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid #bbb;
+  padding-top: 10px;
+}
+
+.queue-button {
+  width: 45px;
+  display: block;
+  border-radius: 6px;
+}
+
+.queue-clear {
+  padding: 4px;
+  background: #ff6961;
+}
+
+.queue-start-reading {
+  padding: 10px;
+  font-weight: bold;
+  background-color: #45af8e;
+  color: #fff;
+}
+
+/* Extention overrides */
+.lv2-micro-item-button {
+  display: flex;
+}
+
+.lv2-micro-item-button .lv2-button,
+.lv2-micro-item-button .lv2-row-button {
+  flex-grow: 1;
+}
+
+/* Style overrides for my books to make it look nice */
+[data-analytics-endpoint='user/library'] {
+  background: #333;
+}
+
+.lv2-tabs-layout {
+  box-shadow: #efefef 0 4px 17px 15px;
+}
+
+.lv2-tab-content .lv2-book-micro-item,
+.lv2-tab-content .lv2-series-micro-item {
+  padding: 6px 14px 0;
+  height: 44px;
+}
+
+.lv2-micro-price-container {
+  min-width: 90px;
+  display: flex;
+}
+
+.lv2-sale-info .lv2-discounted-price {
+  margin: 0 5px;
+}
