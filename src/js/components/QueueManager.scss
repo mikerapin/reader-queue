@@ -30,6 +30,11 @@
   min-width: 200px;
   box-shadow: 1px 1px 10px #666;
   border-radius: 6px;
+  display: none;
+
+  &.show-queue {
+    display: block;
+  }
 }
 
 .queue-manager-buttons {
@@ -46,12 +51,31 @@
 .queue-item-container {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   padding: 8px 5px;
+}
+
+.queue-arranger {
+  display: flex;
+
+  .queue-position-button {
+    background: 0 none;
+    
+    &:last-child {
+      margin-right: 10px;
+    }
+  }
+
+  svg {
+    height: 22px;
+    width: 22px;
+    vertical-align: middle;
+  }
 }
 
 .queue-item {
   margin-right: 10px;
+  flex-grow: 1;
 }
 
 .remove-queue-item {

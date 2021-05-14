@@ -9,6 +9,7 @@ queueRoot.id = 'queue-root';
 tabNav.appendChild(queueRoot);
 
 // cool!
+declare var chrome;
 
 chrome.storage.sync.get(['readqueue'], (result) => {
   let storedQueue: ReadQueue = [];

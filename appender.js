@@ -1,73 +1,70 @@
 const initialize = () => {
-    const endComic = document.querySelector('.end-comic');
-    const endRelatedTitleSection = document.querySelector('.end-related-title-section');
-    const nextInQueue = document.createElement('section');
-    nextInQueue.classList.add('queue-container', 'end-comic');
+  const endComic = document.querySelector('.end-comic');
+  const endRelatedTitleSection = document.querySelector('.end-related-title-section');
+  const nextInQueue = document.createElement('section');
+  nextInQueue.classList.add('queue-container', 'end-comic');
 
-    let nextItem;
-    let observerElement;
+  let nextItem;
+  let observerElement;
 
-    chrome.storage.sync.get(['readqueue'], (result) => {
-        const queue = result.readqueue;
-        const currentlyReading = window.location.href.match(/[0-9]+/g);
-        let topOfQueue;
+  chrome.storage.sync.get(['readqueue'], (result) => {
+    const queue = result.readqueue;
+    const currentlyReading = window.location.href.match(/[0-9]+/g);
+    let topOfQueue;
 
-        // if we have any strange business in the url, just get the EFF out of there
-        if (currentlyReading.length !== 2) {
-            return;
-        }
-        
-        // remove the top item from the queue if it matches the current book we're reading
-        if (queue[0].sid === currentlyReading[0] && queue[0].id === currentlyReading[1]) {
-            queue.shift();
-        }
+    // if we have any strange business in the url, just get the EFF out of there
+    if (currentlyReading.length !== 2) {
+      return;
+    }
 
-        if (queue.length) {
-            topOfQueue = queue[0]
-        } else {
-            topOfQueue = null;
-        }
+    // remove the top item from the queue if it matches the current book we're reading
+    if (queue[0].sid === currentlyReading[0] && queue[0].id === currentlyReading[1]) {
+      queue.shift();
+    }
 
-        if (topOfQueue !== null) {
-            // this is kind of simplistic, could be refactored to be less template and more programmatic?
-            nextInQueue.innerHTML = `
+    if (queue.length) {
+      topOfQueue = queue[0];
+    } else {
+      topOfQueue = null;
+    }
+
+    if (topOfQueue !== null) {
+      // this is kind of simplistic, could be refactored to be less template and more programmatic?
+      nextInQueue.innerHTML = `
             <h3 class="end-subtitle">Keep Reading In Your Queue</h3>
             <h4>${topOfQueue.title}</h4>
             <div class="ComicBtn actBtn readBtn queue-read-button">
             <a class="read_link read-action primary-action action-button queue-read" href="https://www.comixology.com/comic-reader/${topOfQueue.sid}/${topOfQueue.id}">Read</a>
             </div>
             `;
-            
-            // hey, there's a next item to read, prepend it
-            if (endComic) {
-                endComic.parentElement.insertBefore(nextInQueue, endComic);
-                observerElement = endComic;
-            } else {
-                // we're at either the end of a series or there is no next comic so do some fun business
-                // to inject the next queue item
-                nextInQueue.classList.add('no-next')
-                endRelatedTitleSection.parentElement.insertBefore(nextInQueue, endRelatedTitleSection);
-                observerElement = endRelatedTitleSection;
-            }
 
+      // hey, there's a next item to read, prepend it
+      if (endComic) {
+        endComic.parentElement.insertBefore(nextInQueue, endComic);
+        observerElement = endComic;
+      } else {
+        // we're at either the end of a series or there is no next comic so do some fun business
+        // to inject the next queue item
+        nextInQueue.classList.add('no-next');
+        endRelatedTitleSection.parentElement.insertBefore(nextInQueue, endRelatedTitleSection);
+        observerElement = endRelatedTitleSection;
+      }
+    }
+
+    // use this clever little devil to only update the queue when the end modal is visible
+    const observer = new IntersectionObserver((entries, obs) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          chrome.storage.sync.set({ readqueue: queue });
+          obs.disconnect();
         }
-
-        // use this clever little devil to only update the queue when the end modal is visible
-        const observer = new IntersectionObserver((entries, obs) => {
-            entries.forEach((entry) => {
-                if (entry.isIntersecting) {
-                    chrome.storage.sync.set({ 'readqueue': queue })
-                    obs.disconnect()
-                }
-            })
-        })
-        observer.observe(observerElement)
-    
+      });
     });
-}
+    observer.observe(observerElement);
+  });
+};
 
 window.setTimeout(initialize(), 2000);
-
 
 /*
 

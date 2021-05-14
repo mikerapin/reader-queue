@@ -55,6 +55,7 @@ const addToQueue = (e) => {
       sid: data.sid,
       id: data.id
     });
+    console.log(chrome.storage);
     chrome.storage.sync.set({ readqueue: readQueue }, () => {
       createManager();
     });

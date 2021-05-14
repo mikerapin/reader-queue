@@ -1,44 +1,20 @@
-import { read } from 'fs';
 import React, { useEffect, useState } from 'react';
 import { QueueItem, ReadQueue } from '../constants/types';
+import { ChevronDown } from '../icons/ChevronDown';
+import { ChevronUp } from '../icons/ChevronUp';
 import { ClearIcon } from '../icons/ClearIcon';
 import { QueueIcon } from '../icons/QueueIcon';
 import { RemoveIcon } from '../icons/RemoveIcon';
 import { _id } from '../utils';
 import './QueueManager.scss';
 
-const QueueItem = ({ queueItem }: { queueItem: QueueItem }): JSX.Element => {
-  return (
-    <div className="queue-item-container">
-      <div className="queue-item">{queueItem.title}</div>
-      <div className="queue-item-remove">
-        <button className="remove-queue-item" data-uid={queueItem.uid}>
-          <RemoveIcon />
-        </button>
-      </div>
-    </div>
-  );
-};
+declare var chrome;
 
-const QueueList = ({ showQueue, readQueue }: { showQueue: boolean; readQueue: ReadQueue }): JSX.Element => {
-  if (!showQueue) {
-    return null;
-  }
-  const getReadQueue = () => {
-    if (readQueue.length) {
-      return readQueue.map((queueItem: QueueItem) => <QueueItem key={queueItem.uid} queueItem={queueItem} />);
-    }
-    return <span>Empty Queue</span>;
-  };
-
-  return <div className="queue-manager">{getReadQueue()}</div>;
-};
-
-const ClearQueueButton = (): JSX.Element => {
+const ClearQueueButton = ({ setReadQueue }: { setReadQueue: (readQueue: ReadQueue) => void }): JSX.Element => {
   const clearQueue = (): void => {
     if (confirm('are you sure you want to clear the queue???')) {
       chrome.storage.sync.set({ readqueue: [] }, () => {
-        // regenerate the queue
+        setReadQueue([]);
       });
     }
   };
@@ -66,6 +42,12 @@ export const QueueManager = ({ storedQueue }: { storedQueue: ReadQueue }): JSX.E
   const [readQueue, setReadQueue] = useState<ReadQueue>(storedQueue);
   const queueHasItems = readQueue.length;
 
+  const updateQueueAndSync = (newQueue: ReadQueue) => {
+    chrome.storage.sync.set({ readqueue: readQueue }, () => {
+      setReadQueue([...newQueue]);
+    });
+  };
+
   const buildReaderButtons = (): void => {
     const bookContainer = document.querySelectorAll('.lv2-book-item, .lv2-book-micro-item');
     const currentQueue = readQueue;
@@ -88,12 +70,9 @@ export const QueueManager = ({ storedQueue }: { storedQueue: ReadQueue }): JSX.E
         sid: newItemSeriesId,
         id: newItemId
       });
-      console.log(currentQueue);
 
       // save the new queue in the chrome storage and also update our component so we'll re-render :)
-      chrome.storage.sync.set({ readqueue: currentQueue }, () => {
-        setReadQueue(currentQueue);
-      });
+      updateQueueAndSync(currentQueue);
     };
 
     bookContainer.forEach((container) => {
@@ -149,12 +128,47 @@ export const QueueManager = ({ storedQueue }: { storedQueue: ReadQueue }): JSX.E
     }, 250);
   }, []);
 
+  const removeFromQueue = (uid: string) => {
+    const tempQueue = readQueue;
+    // find and remove from the queue
+    // this should probably be moved to the QueueManager/Queue component
+    const index = tempQueue.findIndex((item) => item.uid === uid);
+    if (index > -1) {
+      tempQueue.splice(index, 1);
+    }
+    updateQueueAndSync(tempQueue);
+  };
+
+  const updatePosition = () => {
+    return;
+  };
+
+  let queueContainerClasses = 'queue-manager';
+  if (showQueue) {
+    queueContainerClasses += ' show-queue';
+  }
+
+  const moveInQueue = (uid: string, direction: 'up' | 'down') => {
+    const tempQueue = readQueue;
+    const currentIndex = tempQueue.findIndex((item) => item.uid === uid);
+    if (direction === 'up' && currentIndex > 0) {
+      const temp = readQueue[currentIndex - 1];
+      tempQueue[currentIndex - 1] = tempQueue[currentIndex];
+      tempQueue[currentIndex] = temp;
+    } else if (direction === 'down' && currentIndex < tempQueue.length - 1) {
+      const temp = readQueue[currentIndex + 1];
+      tempQueue[currentIndex + 1] = tempQueue[currentIndex];
+      tempQueue[currentIndex] = temp;
+    }
+    updateQueueAndSync(tempQueue);
+  };
+
   return (
     <div className="queue-manager-container">
       <div className="queue-manager-buttons">
         {queueHasItems ? (
           <>
-            <ClearQueueButton />
+            <ClearQueueButton setReadQueue={setReadQueue} />
             <StartReadingButton readQueue={readQueue} />
           </>
         ) : null}
@@ -162,7 +176,36 @@ export const QueueManager = ({ storedQueue }: { storedQueue: ReadQueue }): JSX.E
           <QueueIcon />
         </button>
       </div>
-      <QueueList showQueue={showQueue} readQueue={readQueue} />
+      <div className={queueContainerClasses}>
+        {readQueue.length ? (
+          readQueue.map((queueItem: QueueItem, index: number) => (
+            <div key={queueItem.uid} className="queue-item-container">
+              <div className="queue-arranger">
+                <button
+                  className={index === 0 ? 'queue-position-button hide' : 'queue-position-button'}
+                  onClick={() => moveInQueue(queueItem.uid, 'up')}
+                >
+                  <ChevronUp />
+                </button>
+                <button
+                  className={index === readQueue.length - 1 ? 'queue-position-button hide' : 'queue-position-button'}
+                  onClick={() => moveInQueue(queueItem.uid, 'down')}
+                >
+                  <ChevronDown />
+                </button>
+              </div>
+              <div className="queue-item">{queueItem.title}</div>
+              <div className="queue-item-remove">
+                <button className="remove-queue-item" onClick={() => removeFromQueue(queueItem.uid)} data-uid={queueItem.uid}>
+                  <RemoveIcon />
+                </button>
+              </div>
+            </div>
+          ))
+        ) : (
+          <span>Empty Queue</span>
+        )}
+      </div>
     </div>
   );
 };
