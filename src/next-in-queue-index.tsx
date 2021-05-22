@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import NextInQueue from './js/components/NextInQueue';
-import { ReadQueue } from './js/constants/types';
+import { DEFAULT_EXTENSION_OPTIONS, ExtensionOptions, ReadQueue } from './js/constants/types';
 
 // cool!
 declare var chrome;
@@ -30,14 +30,20 @@ if (endComic) {
 const observer = new IntersectionObserver((entries, obs) => {
   entries.forEach((entry) => {
     if (entry.isIntersecting) {
-      chrome.storage.sync.get(['readqueue'], (result) => {
+      chrome.storage.sync.get(['readqueue', 'extensionOptions'], (result) => {
         let storedQueue: ReadQueue = [];
-        if (result && result.readqueue) {
-          storedQueue = result.readqueue as ReadQueue;
+        let storedOptions: ExtensionOptions = DEFAULT_EXTENSION_OPTIONS;
+        if (result) {
+          if (result.readqueue) {
+            storedQueue = result.readqueue as ReadQueue;
+          }
+          if (result.extensionOptions) {
+            storedOptions = result.extensionOptions as ExtensionOptions;
+          }
         }
         ReactDOM.render(
           <React.StrictMode>
-            <NextInQueue storedQueue={storedQueue} />
+            <NextInQueue storedQueue={storedQueue} storedOptions={storedOptions} />
           </React.StrictMode>,
           document.getElementById('queue-root')
         );

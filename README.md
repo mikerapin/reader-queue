@@ -1,13 +1,19 @@
 # comiXology Reader Queue
+
 A simple extension that allows you to queue items for reading.
 
-When you reach the end of a comic, you'll be prompted to read the next item in your queue. 
+When you reach the end of a comic, you'll be prompted to read the next item in your queue.
 
 Manage your queue in the My Books section of the site.
 
 Author: Mike Rapin - [@mikerapin](https://www.twitter.com/mikerapin)
 
 ## Development Instructions
+
+1. Clone the package
+2. cd into the package folder
+3. run `npm install`
+4. run one of the commands below
 
 ### `npm run dev`
 
@@ -26,9 +32,11 @@ The build is minified and the filenames include the hashes.\
 
 ### Credits
 
-Icons: 
- - https://heroicons.com/
- - https://simpleicons.org/
+Icons:
 
- Baseline:
+- https://heroicons.com/
+- https://simpleicons.org/
+
+Baseline:
+
 - https://github.com/martellaj/chrome-extension-react-typescript-boilerplate

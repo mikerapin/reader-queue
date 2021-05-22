@@ -5,8 +5,10 @@
   "description": "Allows you to queue items from your library for reading in an order you want.",
   "permissions": ["storage"],
   "browser_action": {
-    "default_title": "Allows you to queue items from your library for reading in an order you want."
+    "default_title": "Allows you to queue items from your library for reading in an order you want.",
+    "default_popup": "popup.html"
   },
+  "icons": { "16": "queue16.png", "48": "queue48.png", "128": "queue128.png" },
   "content_scripts": [
     {
       "matches": ["*://www.comixology.com/my-books/*"],

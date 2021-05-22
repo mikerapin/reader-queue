@@ -1,0 +1,97 @@
+<html>
+<head>
+  <title>comiXology Queue Manager</title>
+  <style>
+    body {
+      background-color: #e2e2e2;
+    }
+    h2 {
+      padding: 0;
+      margin: 0 0 10px;
+    }
+    .options-container {
+      width: 350px;
+      padding: 15px;
+      font-size: 16px;
+    }
+    .option-block {
+      display: flex;
+      justify-content: flex-start;
+    }
+    input[type=checkbox] {
+      height: 16px;
+    }
+    .checkbox-container {
+      width: 25px;
+    }
+    .message {
+      margin-top: 15px;
+      font-size: 14px;
+      font-style: italic;
+    }
+    #status {
+      background: yellow;
+      font-style: italic;
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+      padding: 2px 5px 4px;
+      opacity: 0;
+    }
+    #status.appear {
+      opacity: 1;
+      animation: fadeOut ease 1s;
+    }
+    @keyframes fadeOut {
+      0% {
+        opacity:1;
+      }
+      100% {
+        opacity:0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="options-container">
+    <h2>Queue Manager Options</h2>
+    <div id="status">
+      Updated
+    </div>
+    <div class="option-block">
+      <div class="checkbox-container">
+        <input type="checkbox" id="custom-css" name="custom-css" value="1" />
+      </div>
+      <div class="option-text">
+        <label for="custom-css">
+          Use dark themed My Books 
+        </label>
+      </div>
+    </div>
+    <!-- <div class="option-block">
+        <div class="checkbox-container">
+          <input type="checkbox" id="remove-after-reading" name="remove-after-reading" value="1" />
+        </div>
+        <div class="option-text">
+          <label for="remove-after-reading">
+            Remove item from queue after reading
+          </label>
+        </div>
+    </div> -->
+    <div class="option-block">
+        <div class="checkbox-container">
+          <input type="checkbox" id="show-queue-on-start" name="show-queue-on-start" value="1" />
+        </div>
+        <div class="option-text">
+          <label for="show-queue-on-start">
+            Show queue when opening My Books 
+          </label>
+        </div>
+    </div>
+    <div class="message">
+      Please refresh the comiXology site after making any changes.
+    </div>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>

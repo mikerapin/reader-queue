@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import { QueueItem, ReadQueue } from '../constants/types';
+import { read } from 'fs';
+import React, { useEffect, useRef, useState } from 'react';
+import { ExtensionOptions, QueueItem, ReadQueue } from '../constants/types';
 import { ChevronDown } from '../icons/ChevronDown';
 import { ChevronUp } from '../icons/ChevronUp';
 import { ClearIcon } from '../icons/ClearIcon';
@@ -10,12 +11,13 @@ import './QueueManager.scss';
 
 declare var chrome;
 
-const ClearQueueButton = ({ setReadQueue }: { setReadQueue: (readQueue: ReadQueue) => void }): JSX.Element => {
+/**
+ * Clear all of the items out of the queue
+ */
+const ClearQueueButton = ({ updateQueueAndSync }: { updateQueueAndSync: (readQueue: ReadQueue) => void }): JSX.Element => {
   const clearQueue = (): void => {
     if (confirm('are you sure you want to clear the queue???')) {
-      chrome.storage.sync.set({ readqueue: [] }, () => {
-        setReadQueue([]);
-      });
+      updateQueueAndSync([] as ReadQueue);
     }
   };
   return (
@@ -25,6 +27,9 @@ const ClearQueueButton = ({ setReadQueue }: { setReadQueue: (readQueue: ReadQueu
   );
 };
 
+/**
+ * Find the first item in the queue and redirect the user to read it
+ */
 const StartReadingButton = ({ readQueue }: { readQueue: ReadQueue }): JSX.Element => {
   const startReading = () => {
     const firstItem = readQueue[0];
@@ -37,43 +42,56 @@ const StartReadingButton = ({ readQueue }: { readQueue: ReadQueue }): JSX.Elemen
   );
 };
 
-export const QueueManager = ({ storedQueue }: { storedQueue: ReadQueue }): JSX.Element => {
-  const [showQueue, setShowQueue] = useState<boolean>(false);
+export const QueueManager = ({ storedQueue, storedOptions }: { storedQueue: ReadQueue; storedOptions: ExtensionOptions }): JSX.Element => {
   const [readQueue, setReadQueue] = useState<ReadQueue>(storedQueue);
+  const [options] = useState<ExtensionOptions>(storedOptions);
+  const [showQueue, setShowQueue] = useState<boolean>(options.showQueueOnStart);
+  const queueRef = useRef<ReadQueue>(readQueue);
   const queueHasItems = readQueue.length;
 
+  if (options.customCss) {
+    document.body.classList.add('queue-custom-style');
+  }
+
   const updateQueueAndSync = (newQueue: ReadQueue) => {
-    chrome.storage.sync.set({ readqueue: readQueue }, () => {
-      setReadQueue([...newQueue]);
+    const queue = [...newQueue];
+    chrome.storage.sync.set({ readqueue: queue }, () => {
+      // we need this specifically for the add buttins since they don't use state properly
+      queueRef.current = queue;
+      setReadQueue(queue);
     });
   };
 
+  /**
+   * Add an item to the queue.
+   * Because this function is added to items that don't care for our state,
+   * we use the queueRef to ensure we're always getting the latest queue before
+   * we trigger an update
+   * @param item an item to be queued
+   */
+  const addToQueue = (item: QueueItem) => {
+    const currentQueue = [...queueRef.current];
+
+    if (currentQueue.length) {
+      const index = currentQueue.findIndex((qItem) => {
+        return qItem.id === item.id && qItem.sid === item.sid;
+      });
+      if (index > -1) {
+        currentQueue.splice(index, 1);
+      }
+    }
+    currentQueue.push(item);
+
+    // save the new queue in the chrome storage and also update our component so we'll re-render :)
+    updateQueueAndSync(currentQueue);
+  };
+
+  /**
+   * This generates all of the "add" buttons within the My Books page
+   * and appends them to each readable book
+   */
   const buildReaderButtons = (): void => {
     const bookContainer = document.querySelectorAll('.lv2-book-item, .lv2-book-micro-item');
-    const currentQueue = readQueue;
-
-    const addToQueue = (e: MouseEvent) => {
-      const data = (e.target as HTMLButtonElement).dataset;
-      const newItemId = parseInt(data.id, 10);
-      const newItemSeriesId = parseInt(data.sid, 10);
-      if (currentQueue.length) {
-        const index = currentQueue.findIndex((qItem) => {
-          return qItem.id === newItemId && qItem.sid === newItemSeriesId;
-        });
-        if (index > -1) {
-          readQueue.splice(index, 1);
-        }
-      }
-      currentQueue.push({
-        uid: _id(),
-        title: data.title.trim(),
-        sid: newItemSeriesId,
-        id: newItemId
-      });
-
-      // save the new queue in the chrome storage and also update our component so we'll re-render :)
-      updateQueueAndSync(currentQueue);
-    };
 
     bookContainer.forEach((container) => {
       const readerButton = container.querySelector('.lv2-read-button');
@@ -94,11 +112,16 @@ export const QueueManager = ({ storedQueue }: { storedQueue: ReadQueue }): JSX.E
       addToQueueButton.textContent = '+';
       addToQueueButton.classList.add('add-to-queue');
       if (itemId) {
-        addToQueueButton.dataset.sid = itemId[0];
-        addToQueueButton.dataset.id = itemId[1];
-        addToQueueButton.dataset.title = queueItemTitle.trim();
+        const itemData: QueueItem = {
+          uid: _id(),
+          sid: parseInt(itemId[0], 10),
+          id: parseInt(itemId[1], 10),
+          title: queueItemTitle.trim()
+        };
 
-        addToQueueButton.addEventListener('click', addToQueue);
+        addToQueueButton.addEventListener('click', () => {
+          addToQueue(itemData);
+        });
         readerButton.parentElement.appendChild(addToQueueButton);
       }
     });
@@ -113,13 +136,16 @@ export const QueueManager = ({ storedQueue }: { storedQueue: ReadQueue }): JSX.E
         tabContent.id = 'lv2-tab-content';
         buildReaderButtons();
 
-        // mutation observer to watch when the content changes
-        const contentById = document.getElementById('lv2-tab-content');
+        /**
+         * Using the observer, we can watch for changes on the page and trigger
+         * adding the buttons once the page finishes loading
+         */
+        const contentId = document.getElementById('lv2-tab-content');
         const observer = new MutationObserver(() => {
           buildReaderButtons();
         });
-        if (contentById) {
-          observer.observe(contentById, {
+        if (contentId) {
+          observer.observe(contentId, {
             childList: true
           });
         }
@@ -128,6 +154,10 @@ export const QueueManager = ({ storedQueue }: { storedQueue: ReadQueue }): JSX.E
     }, 250);
   }, []);
 
+  /**
+   * Remove an item from the queue.
+   * @param uid the unique id within the queue
+   */
   const removeFromQueue = (uid: string) => {
     const tempQueue = readQueue;
     // find and remove from the queue
@@ -135,12 +165,32 @@ export const QueueManager = ({ storedQueue }: { storedQueue: ReadQueue }): JSX.E
     const index = tempQueue.findIndex((item) => item.uid === uid);
     if (index > -1) {
       tempQueue.splice(index, 1);
+      updateQueueAndSync(tempQueue);
+    } else {
+      console.log('Couldn\'t find that uid:', uid, tempQueue);
     }
-    updateQueueAndSync(tempQueue);
   };
 
-  const updatePosition = () => {
-    return;
+  /**
+   * Move an item within the queue:
+   *  'up'    - To the top of the queue
+   *  'down'  - To the bottom of the queue
+   * @param uid the unique id of an item within the queue
+   * @param direction which direction you're moving in the queue (up, or down)
+   */
+  const moveInQueue = (uid: string, direction: 'up' | 'down') => {
+    const tempQueue = readQueue;
+    const currentIndex = tempQueue.findIndex((item) => item.uid === uid);
+    if (direction === 'up' && currentIndex > 0) {
+      const temp = tempQueue[currentIndex - 1];
+      tempQueue[currentIndex - 1] = tempQueue[currentIndex];
+      tempQueue[currentIndex] = temp;
+    } else if (direction === 'down' && currentIndex < tempQueue.length - 1) {
+      const temp = tempQueue[currentIndex + 1];
+      tempQueue[currentIndex + 1] = tempQueue[currentIndex];
+      tempQueue[currentIndex] = temp;
+    }
+    updateQueueAndSync(tempQueue);
   };
 
   let queueContainerClasses = 'queue-manager';
@@ -148,27 +198,12 @@ export const QueueManager = ({ storedQueue }: { storedQueue: ReadQueue }): JSX.E
     queueContainerClasses += ' show-queue';
   }
 
-  const moveInQueue = (uid: string, direction: 'up' | 'down') => {
-    const tempQueue = readQueue;
-    const currentIndex = tempQueue.findIndex((item) => item.uid === uid);
-    if (direction === 'up' && currentIndex > 0) {
-      const temp = readQueue[currentIndex - 1];
-      tempQueue[currentIndex - 1] = tempQueue[currentIndex];
-      tempQueue[currentIndex] = temp;
-    } else if (direction === 'down' && currentIndex < tempQueue.length - 1) {
-      const temp = readQueue[currentIndex + 1];
-      tempQueue[currentIndex + 1] = tempQueue[currentIndex];
-      tempQueue[currentIndex] = temp;
-    }
-    updateQueueAndSync(tempQueue);
-  };
-
   return (
     <div className="queue-manager-container">
       <div className="queue-manager-buttons">
         {queueHasItems ? (
           <>
-            <ClearQueueButton setReadQueue={setReadQueue} />
+            <ClearQueueButton updateQueueAndSync={updateQueueAndSync} />
             <StartReadingButton readQueue={readQueue} />
           </>
         ) : null}
@@ -182,13 +217,13 @@ export const QueueManager = ({ storedQueue }: { storedQueue: ReadQueue }): JSX.E
             <div key={queueItem.uid} className="queue-item-container">
               <div className="queue-arranger">
                 <button
-                  className={index === 0 ? 'queue-position-button hide' : 'queue-position-button'}
+                  className={index === 0 ? 'queue-position-button queue-invisible' : 'queue-position-button'}
                   onClick={() => moveInQueue(queueItem.uid, 'up')}
                 >
                   <ChevronUp />
                 </button>
                 <button
-                  className={index === readQueue.length - 1 ? 'queue-position-button hide' : 'queue-position-button'}
+                  className={index === readQueue.length - 1 ? 'queue-position-button queue-invisible' : 'queue-position-button'}
                   onClick={() => moveInQueue(queueItem.uid, 'down')}
                 >
                   <ChevronDown />
